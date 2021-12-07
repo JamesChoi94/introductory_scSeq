@@ -43,7 +43,7 @@ z <- data.frame(x, y) # data.frame
 # data structures.
 
 x[1] # extract value at position 1
-y[c(1,2,3)] # extract values at positions 1, 2, and 3
+y[c(1,3)] # extract values at positions 1, 2, and 3
 z[[1]] # extract column 1
 
 

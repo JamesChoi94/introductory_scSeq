@@ -6,7 +6,7 @@ library('Seurat')
 library('ggplot2')
 library('dplyr')
 
-macroglia <- readRDS(file = 'macroglia.rds')
+macroglia <- readRDS(file = './data/macroglia.rds')
 
 
 
@@ -42,7 +42,7 @@ macroglia@assays$RNA@scale.data # Relative expression compared to all other cell
 # 10, 20, 30
 
 
-dim(macroglia@assays$RNA)
+dim(macroglia@assays$RNA@counts)
 macroglia@assays$RNA@counts['Gfap',]
 summary(macroglia@assays$RNA@counts['Gfap',])
 
@@ -61,9 +61,9 @@ rownames(macroglia@meta.data)
 # The results of the subcluster analysis (as reported in our pre-print) are
 # saved under the "subcluster" column of the macroglia@meta.data data.
 
-macroglia@meta.data$subcluster
-table(macroglia@meta.data$subcluster)
-table(macroglia@meta.data$subcluster, macroglia@meta.data$Time)
+macroglia@meta.data$macroglia_subcluster
+table(macroglia@meta.data$macroglia_subcluster)
+table(macroglia@meta.data$macroglia_subcluster, macroglia@meta.data$time)
 
 
 # There are other numerical/categorical data that you can explore.
@@ -81,13 +81,13 @@ table(Idents(macroglia))
 
 # You can set different cell labels using the data stored in the meta.data.
 
-macroglia@meta.data$Time
-Idents(macroglia) <- 'Time' # Write meta.data column name here
+macroglia@meta.data$time
+Idents(macroglia) <- 'time' # Write meta.data column name here
 Idents(macroglia)
 table(Idents(macroglia))
 
 # Taking a subset of cells:
-my_subset <- macroglia[,macroglia@meta.data$Time == '1d']
+my_subset <- macroglia[,macroglia@meta.data$time == '1dpi']
 dim(my_subset)
 
 
@@ -102,7 +102,7 @@ DimPlot(macroglia)
 
 
 # To overlay the cell identities (labels):
-Idents(macroglia) <- 'subcluster'
+Idents(macroglia) <- 'macroglia_subcluster'
 DimPlot(macroglia, label = TRUE)
 DimPlot(macroglia, label = TRUE, label.size = 5)
 
@@ -124,9 +124,10 @@ DimPlot(macroglia)
 
 # You can also generate separate UMAPs side-by-side.
 # Generate a separate UMAP for each time-point:
-Idents(macroglia) <- 'subcluster'
-DimPlot(macroglia, split.by = 'Time')
+Idents(macroglia) <- 'macroglia_subcluster'
+DimPlot(macroglia, split.by = 'time')
 DimPlot(macroglia, split.by = 'orig.ident', ncol = 4)
+DimPlot(macroglia, group.by = 'macroglia_subcluster', split.by = 'time')
 
 
 
@@ -151,16 +152,20 @@ ggsave(plot = plot_by_time,
 
 # Plot gene expression values:
 FeaturePlot(macroglia, features = 'Aqp4')
-FeaturePlot(macroglia, features = 'Aqp4', split.by = 'Time')
+FeaturePlot(macroglia, features = 'Aqp4', split.by = 'time')
 FeaturePlot(macroglia, features = 'Aqp4', slot = 'counts')
 
 
 # Plot numerical variables from the meta.data
-FeaturePlot(macroglia, 'percent.mt')
+FeaturePlot(macroglia, 'nFeature_RNA')
+FeaturePlot(macroglia, 'nFeature_RNA', order = TRUE)
+FeaturePlot(macroglia, 'Slc1a2', order = TRUE)
 
 
 # Plot multiple features:
 FeaturePlot(macroglia, features = c('Aqp4', 'Foxj1'))
+my_genes <- c('Aqp4','Foxj1','Slc1a2','Gfap','Olig2')
+FeaturePlot(macroglia, features = my_genes)
 
 
 # Change colors if desired:
@@ -181,10 +186,32 @@ FeaturePlot(macroglia, 'Itgam')
 # plot:
 
 VlnPlot(macroglia, 'Aqp4')
-VlnPlot(macroglia, 'Aqp4', split.by = 'Time')
+VlnPlot(macroglia, 'Aqp4', split.by = 'time')
+
+# color violins manually
+my_violin_colors <- c('Ependymal-A' = 'red',
+                      'Ependymal-B' = 'blue',
+                      'Astroependymal' = 'green',
+                      'Astrocyte' = '#fff000',
+                      'OPC-A' = 'magenta',
+                      'OPC-B' = 'navy',
+                      'Pre-Oligo' = 'purple',
+                      'Oligodendrocyte' = 'grey')
+VlnPlot(macroglia, features = 'Aqp4', pt.size = 0) +
+  scale_fill_manual(values = my_violin_colors)
+
+# Plot specific subtypes and split by condition
+Idents(macroglia) <- 'macroglia_subcluster'
+my_favorite_cells <- c('Astrocyte','OPC-A','OPC-B')
+VlnPlot(macroglia, features = 'Apoe', split.by = 'time',
+        idents = my_favorite_cells) +
+  scale_fill_manual(values = c('Uninjured' = 'red', 
+                               '1dpi' = 'yellow', 
+                               '3dpi' = 'green', 
+                               '7dpi' = 'blue'))
 
 
-Idents(macroglia) <- 'Time'
+Idents(macroglia) <- 'time'
 VlnPlot(macroglia, 'Apoe')
 VlnPlot(macroglia, 'Apoe', split.by = 'subcluster')
 
@@ -219,31 +246,33 @@ summary(macroglia@assays$RNA@scale.data['Mki67',])
 # Visualizing relative expression -----------------------------------------
 
 # First, we can check via dot plots.
-DotPlot(macroglia, features = c('Slc1a2', 'Aqp4', 'Apoe'))
+DotPlot(macroglia, features = my_genes)
 
 
 # We can further split the dots by other meta.data (e.g. Time)
 DotPlot(macroglia, 
-        features = c('Slc1a2','Aqp4','Apoe'),
-        split.by = 'Time',
+        features = my_genes,
+        split.by = 'time',
         cols = c('red','red','red','red'))
 
 
 # Rotate axis for better spacing
 DotPlot(macroglia, 
         features = c('Slc1a2','Aqp4','Apoe'),
-        split.by = 'Time',
+        split.by = 'time',
         cols = rep('red', 4)) +
   coord_flip() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-
+DotPlot(macroglia, features = my_genes) +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # We can further inspect relative expression at the single-cell levels with
 # a heatmap:
-DoHeatmap(macroglia, features =  c('Slc1a2','Aqp4','Apoe'))
+DoHeatmap(macroglia, features =  my_genes)
 
-DoHeatmap(macroglia, features =  c('Slc1a2','Aqp4','Apoe'), size = 3)
+DoHeatmap(macroglia, features =  my_genes, size = 3)
 
 
 
