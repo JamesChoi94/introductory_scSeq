@@ -6,9 +6,11 @@ Teaching materials for learning single-cell RNAseq (and related) analyses.
 
 We mostly follow the Seurat pipeline. Seurat's website has many well-documented tutorials and vignettes for your reference: https://satijalab.org/seurat/
 
+
 ## Data availability
 
-Data for these demos can be found here: https://drive.google.com/drive/folders/1LpFPA-a_kaqGevxqF5jFldptOF8BrkmK?usp=sharing
+Data for these demos can be found in the data folder in this Google drive folder:
+https://drive.google.com/drive/folders/1NaaiTAq9UntVXrpuPs2wy95C_ojy_tZ2?usp=sharing
 
 The data are from two studies:
 1. Lindsay M. Milich, James S. Choi, Christine Ryan, Susana R. Cerqueira, Sofia Benavides, Stephanie L. Yahn, Pantelis Tsoulfas, Jae K. Lee; Single-cell analysis of the cellular heterogeneity and interactions in the injured mouse spinal cord. J Exp Med 2 August 2021; 218 (8): e20210040. doi: https://doi.org/10.1084/jem.20210040.

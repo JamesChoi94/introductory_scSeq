@@ -126,6 +126,50 @@ my_de <- read.csv(file = './results/my_de.csv', row.names = 1)
 
 
 
+
+# Mapping new metadata slots ----------------------------------------------
+
+macroglia@meta.data$inj_status <- plyr::mapvalues(
+  x = macroglia@meta.data$orig.ident,
+  from = c('sample1','sample2','sample3','sample4','sample5','sample6'),
+  to = c('inj', 'inj', 'inj', 'uninj', 'uninj', 'uninj')
+)
+
+# read in mappings csv
+mappings <- read.csv(file = 'data/cell_mappings.csv')
+macroglia@meta.data$inj_status <- plyr::mapvalues(
+  x = macroglia@meta.data$orig.ident,
+  from = mappings$ï..cluster,
+  to = mappings$inj_status
+)
+
+
+
+# Get average gene expression info ----------------------------------------
+
+DefaultAssay(macroglia)
+avgexp <- AverageExpression(macroglia, assay = 'RNA', 
+                            features = rownames(macroglia@assays$RNA@counts),
+                            group.by = c('macroglia_subcluster', 'time'))
+avgexp$RNA
+
+write.csv(file = 'results/average_Expression.csv', x = avgexp$RNA)
+
+
+
+
+# Rearrange violin plot axis order ----------------------------------------
+
+macroglia$time
+macroglia$time <- factor(
+  x = macroglia$time,
+  levels = c('7dpi', '3dpi', '1dpi', 'Uninjured')
+)
+VlnPlot(macroglia, features = 'Gfap', group.by = 'time')
+
+
+
+
 # DE results visualization ------------------------------------------------
 
 # Classic DE test visualization is a volcano plot.
